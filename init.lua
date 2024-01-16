@@ -11,17 +11,22 @@ local function splurp_node(name, def)
 	local allow_put = def.allow_metadata_inventory_put
 	local on_put = def.on_metadata_inventory_put or function() end
 	local on_construct = def.on_construct or function() end
-	local on_timer = def.on_timer
-	if not on_timer then return end
+	local on_timer = def.on_timer or function() end
 	if not allow_put then return end
+	if not on_timer then return end
 	local function construct(pos)
 		local meta = minetest.get_meta(pos)
 		local inv = meta:get_inventory()
-		if  inv:get_list("src")
-		and inv:get_list("dst")
-		and inv:get_list("fuel")
+		if  inv:get_size("src") == 1
+		and inv:get_size("dst") > 0
+		and inv:get_size("fuel") == 1
 		then
 			inv:set_size("cooksneak",1)
+			if  meta:get_string("formspec") ~= ""
+			and meta:get_string("cooksneak_injection") == ""
+			then
+				meta:set_string("formspec",meta:get_string("formspec"))
+			end
 		end
 	end
 	def.on_construct = function(...)
@@ -55,9 +60,7 @@ local function splurp_node(name, def)
 		local inv = minetest.get_meta(pos):get_inventory()
 		local output = cooklist(stack)
 		local ret, ret_t = pack(allow_put(pos, output, index, stack, ...))
-		print(output..ret_t[1])
 		ret_t[1] = math.min(ret_t[1], room_in_list(inv, output, stack))
-		print(ret_t[1])
 		return ret()
 	end
 	over.on_metadata_inventory_put = function(pos, listname, index, stack, ...)
@@ -86,7 +89,7 @@ minetest.after(0, function()
 	local meta = getmetatable(minetest.get_meta(vector.new(0,0,0)))
 	local set_string = meta.set_string
 	function meta.set_string(self, k, v, ...)
-		if k == "formspec" then
+		if k == "formspec" and self:get_inventory():get_list("cooksneak") then
 			v = v:gsub(table.concat({
 				"listring[context;dst]",
 				"listring[current_player;main]",
@@ -94,17 +97,18 @@ minetest.after(0, function()
 				"listring[current_player;main]",
 				"listring[context;fuel]",
 				"listring[current_player;main]",
-			}):gsub("%p","%%%0"), table.concat {
-				"listring[context;cooksneak]",
+			}):gsub("%p","%%%0"):gsub("context","([%%w_]+)"), table.concat {
+				"listring[%1;cooksneak]",
 				"listring[current_player;main]",
-				"listring[context;cooksneak]",
-				"listring[context;dst]",
+				"listring[%1;cooksneak]",
+				"listring[%1;dst]",
 				"listring[current_player;main]",
-				"listring[context;src]",
+				"listring[%1;src]",
 				"listring[current_player;main]",
-				"listring[context;fuel]",
+				"listring[%1;fuel]",
 				"listring[current_player;main]",
 			})
+			self:set_string("cooksneak_injection", "1")
 		end
 		return set_string(self, k, v, ...)
 	end
