@@ -9,6 +9,7 @@ end
 local function splurp_node(name, def)
 	local over = {}
 	local allow_put = def.allow_metadata_inventory_put
+	local allow_move = def.allow_metadata_inventory_move or function() end
 	local on_put = def.on_metadata_inventory_put or function() end
 	local on_construct = def.on_construct or function() end
 	local on_timer = def.on_timer or function() end
@@ -22,6 +23,12 @@ local function splurp_node(name, def)
 		and inv:get_size("fuel") == 1
 		then
 			inv:set_size("cooksneak",1)
+			local list = inv:get_list("cooksneak")
+			if list[1]:get_count() > 0 then
+				minetest.handle_node_drops(pos, list)
+				list[1]:set_count(0)
+				inv:set_list("cooksneak", list)
+			end
 			if  meta:get_string("formspec") ~= ""
 			and meta:get_string("cooksneak_injection") == ""
 			then
@@ -62,6 +69,12 @@ local function splurp_node(name, def)
 		local ret, ret_t = pack(allow_put(pos, output, index, stack, ...))
 		ret_t[1] = math.min(ret_t[1], room_in_list(inv, output, stack))
 		return ret()
+	end
+	over.allow_metadata_inventory_move = function(pos, from_list, from_index, to_list, to_index, ...)
+		if from_list == "cooksneak" or to_list == "cooksneak" then
+			return 0
+		end
+		return allow_move(pos, from_list, from_index, to_list, to_index, ...)
 	end
 	over.on_metadata_inventory_put = function(pos, listname, index, stack, ...)
 		if listname ~= "cooksneak" then
