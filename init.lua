@@ -70,6 +70,7 @@ local function splurp_node(name, def)
 		local inv = minetest.get_meta(pos):get_inventory()
 		local output = cooklist(stack)
 		inv:add_item(output, inv:remove_item("cooksneak", stack))
+		return on_put(pos, output, index, stack, ...)
 	end
 	minetest.override_item(name, over)
 end
