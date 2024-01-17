@@ -9,7 +9,13 @@ end
 local function splurp_node(name, def)
 	local over = {}
 	local allow_put = def.allow_metadata_inventory_put
-	local allow_move = def.allow_metadata_inventory_move or function() end
+	local allow_move = def.allow_metadata_inventory_move
+	or function(pos, from_list, from_index)
+		return minetest.get_meta(pos)
+			:get_inventory()
+			:get_stack(from_list, from_index)
+			:get_count()
+	end
 	local on_put = def.on_metadata_inventory_put or function() end
 	local on_construct = def.on_construct or function() end
 	local on_timer = def.on_timer or function() end
@@ -121,6 +127,8 @@ minetest.after(0, function()
 				"listring[current_player;main]",
 				"listring[%1;fuel]",
 				"listring[current_player;main]",
+				-- -- DEBUG
+				-- "list[%1;cooksneak;0,0;1,1;]",
 			})
 			self:set_string("cooksneak_injection", "1")
 		end
