@@ -108,8 +108,10 @@ end
 minetest.after(0, function()
 	local meta = getmetatable(minetest.get_meta(vector.new(0,0,0)))
 	local set_string = meta.set_string
+	local get_string = meta.get_string
 	function meta.set_string(self, k, v, ...)
 		if k == "formspec" and self:get_inventory():get_list("cooksneak") then
+			local v_orig = v
 			v = v:gsub(table.concat({
 				"listring[context;dst]",
 				"listring[current_player;main]",
@@ -130,8 +132,17 @@ minetest.after(0, function()
 				-- -- DEBUG
 				-- "list[%1;cooksneak;0,0;1,1;]",
 			})
-			self:set_string("cooksneak_injection", "1")
+			set_string(self, "cooksneak_injection", v_orig)
 		end
 		return set_string(self, k, v, ...)
+	end
+	function meta.get_string(self, k, ...)
+		if k == "formspec" then
+			local v = get_string(self, "cooksneak_injection")
+			if v ~= "" then
+				return v
+			end
+		end
+		return get_string(self, k, ...)
 	end
 end)
