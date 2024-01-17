@@ -29,12 +29,12 @@ local function splurp_node(name, def)
 		and inv:get_size("fuel") == 1
 		then
 			inv:set_size("cooksneak",1)
-			local list = inv:get_list("cooksneak")
-			if list[1]:get_count() > 0 then
-				minetest.handle_node_drops(pos, list)
-				list[1]:set_count(0)
-				inv:set_list("cooksneak", list)
+			local stack = inv:get_stack("cooksneak", 1)
+			if stack:get_count() > 0 then
+				minetest.handle_node_drops(pos, {stack})
+				stack:set_count(0)
 			end
+			inv:set_stack("cooksneak", 1, stack)
 			if  meta:get_string("formspec") ~= ""
 			and meta:get_string("cooksneak_injection") == ""
 			then
@@ -42,12 +42,12 @@ local function splurp_node(name, def)
 			end
 		end
 	end
-	def.on_construct = function(...)
+	over.on_construct = function(...)
 		local ret = pack(on_construct(...))
 		construct(...)
 		return ret()
 	end
-	def.on_timer = function(...)
+	over.on_timer = function(...)
 		local ret = pack(on_timer(...))
 		construct(...)
 		return ret()
