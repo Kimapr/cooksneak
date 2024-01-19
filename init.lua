@@ -64,7 +64,6 @@ local function splurp_node(name, def)
 		elseif minetest.get_craft_result({method = "fuel", width = 1, items = {stack}}).time ~= 0 then
 			return "fuel"
 		end
-		return "src"
 	end
 	over.allow_metadata_inventory_put = function(pos, listname, index, stack, ...)
 		if listname ~= "cooksneak" then
@@ -72,6 +71,7 @@ local function splurp_node(name, def)
 		end
 		local inv = minetest.get_meta(pos):get_inventory()
 		local output = cooklist(stack)
+		if not output then return 0 end
 		local ret, ret_t = pack(allow_put(pos, output, index, stack, ...))
 		ret_t[1] = math.min(ret_t[1], room_in_list(inv, output, stack))
 		return ret()
